@@ -3,7 +3,7 @@ name: Flaky Test Detection
 on:
   push:
     branches:
-      - '**'  # Run on all branches
+      - 'ws-flaky-test'  # Run only on ws-flaky-test branch
   pull_request:
   schedule:
     - cron: '0 */12 * * 1-5'  # Every 12 hours, Monday to Friday
@@ -41,7 +41,8 @@ jobs:
             echo "Running test suite - attempt $i of $RUN_COUNT"
 
             # Run AVA with TAP output and convert to JUnit XML
-            npm test -- --tap | npx tap-xunit > test-results/junit-$i.xml || true
+            npm test -- --tap > test-results/tap-output-$i.txt 2>&1 || true
+            npx tap-xunit < test-results/tap-output-$i.txt > test-results/junit-$i.xml || echo "Failed to convert TAP output for run $i"
           done
 
       # Debug: Check what files were created
