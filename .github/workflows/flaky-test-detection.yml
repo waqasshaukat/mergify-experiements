@@ -41,13 +41,16 @@ jobs:
             echo "Running test suite - attempt $i of $RUN_COUNT"
 
             # Run AVA with TAP output and convert to JUnit XML using tap-mocha-reporter
-            npm test -- --tap | npx tap-mocha-reporter xunit > test-results/junit-$i.xml 2>&1 || true
+            # Filter out npm output lines (starting with >) to keep only TAP output
+            (npm test -- --tap 2>&1 | grep -v "^>" | npx tap-mocha-reporter xunit || true) > test-results/junit-$i.xml
 
-            # Verify file was created and has content
-            if [ -s test-results/junit-$i.xml ]; then
-              echo "✓ Successfully generated junit-$i.xml"
+            # Verify file was created and has valid XML
+            if [ -s test-results/junit-$i.xml ] && grep -q "<testsuite" test-results/junit-$i.xml; then
+              echo "✓ Successfully generated valid junit-$i.xml"
             else
-              echo "✗ Failed to generate junit-$i.xml or file is empty"
+              echo "✗ Failed to generate valid junit-$i.xml or file is empty/malformed"
+              # Create a minimal valid XML file as fallback
+              echo '<?xml version="1.0"?><testsuite name="Run '$i'" tests="0" failures="0" errors="1"><testcase name="Test execution failed"/></testsuite>' > test-results/junit-$i.xml
             fi
           done
 
@@ -65,6 +68,5 @@ jobs:
         if: always()
         uses: mergifyio/gha-mergify-ci@v6
         with:
-          flaky_test_detection: 'true'
           token: ${{ secrets.MERGIFY_TOKEN }}
           report_path: test-results/*.xml
