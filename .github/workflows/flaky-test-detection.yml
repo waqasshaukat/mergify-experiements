@@ -1,0 +1,85 @@
+name: Flaky Test Detection
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+  schedule:
+    - cron: '0 */12 * * 1-5'  # Every 12 hours, Monday to Friday
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Modified: Run tests multiple times for flaky detection
+      - name: Run tests
+        env:
+          # Run tests 5 times on schedule, once on pull_request
+          RUN_COUNT: 5
+        run: |
+          mkdir -p test-results
+          # Run the test suite based on RUN_COUNT i.e. 5 times
+          for i in $(seq $RUN_COUNT); do
+            echo "Running test suite - attempt $i of $RUN_COUNT"
+
+            # Run AVA with TAP output and convert to JUnit XML using tap-mocha-reporter
+            # Filter out npm output lines (starting with >) to keep only TAP output
+            (npm test -- --tap 2>&1 | grep -v "^>" | npx tap-mocha-reporter xunit || true) > test-results/junit-$i.xml
+
+            # Verify file was created and has valid XML
+            if [ -s test-results/junit-$i.xml ] && grep -q "<testsuite" test-results/junit-$i.xml; then
+              echo "✓ Successfully generated valid junit-$i.xml"
+            else
+              echo "✗ Failed to generate valid junit-$i.xml or file is empty/malformed"
+              # Create a minimal valid XML file as fallback
+              echo '<?xml version="1.0"?><testsuites><testsuite name="Run '$i'" tests="0" failures="0" errors="1"><testcase name="Test execution failed"/></testsuite></testsuites>' > test-results/junit-$i.xml
+            fi
+          done
+
+          # Post-process: Wrap <testsuite> in <testsuites> if needed (Mergify CI requires this)
+          for file in test-results/junit-*.xml; do
+            if [ -f "$file" ] && ! grep -q "<testsuites" "$file"; then
+              echo "Wrapping $file with <testsuites> tag"
+              # Create a temporary file with testsuites wrapper
+              echo '<?xml version="1.0" encoding="UTF-8"?>' > "$file.tmp"
+              echo '<testsuites>' >> "$file.tmp"
+              cat "$file" >> "$file.tmp"
+              echo '</testsuites>' >> "$file.tmp"
+              mv "$file.tmp" "$file"
+            fi
+          done
+
+      # Debug: Check what files were created
+      - name: List test results
+        if: always()
+        run: |
+          echo "Contents of test-results directory:"
+          ls -la test-results/ || echo "test-results directory does not exist"
+          echo "Looking for XML files:"
+          find . -name "*.xml" -type f || echo "No XML files found"
+
+      # Upload all test results to CI Insights
+      - name: Upload test results
+        if: always()
+        uses: mergifyio/gha-mergify-ci@v6
+        with:
+          token: ${{ secrets.MERGIFY_TOKEN }}
+          report_path: test-results/*.xml

@@ -1,0 +1,28 @@
+{
+  "name": "mergify-experiements",
+  "version": "1.0.0",
+  "description": "Repository to experiment with mergify configuration",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waqasshaukat/mergify-experiements.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/waqasshaukat/mergify-experiements/issues"
+  },
+  "homepage": "https://github.com/waqasshaukat/mergify-experiements#readme",
+  "devDependencies": {
+    "ava": "^6.4.1",
+    "tap-mocha-reporter": "^5.0.3"
+  }
+}
