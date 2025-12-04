@@ -6,7 +6,7 @@ on:
       - 'main'
   pull_request:
   schedule:
-    - cron: '0 */12 * * 1-5'  # Every 12 hours, Monday to Friday
+    - cron: '0 */12 * * 1-5'  # Every 12 hours, Mond to Fri
 
 jobs:
   test:
