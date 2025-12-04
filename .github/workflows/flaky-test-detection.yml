@@ -36,7 +36,7 @@ jobs:
           RUN_COUNT: 5
         run: |
           mkdir -p test-results
-          # Run the test suite based on RUN_COUNT
+          # Run the test suite based on RUN_COUNT i.e. 5 times
           for i in $(seq $RUN_COUNT); do
             echo "Running test suite - attempt $i of $RUN_COUNT"
 
