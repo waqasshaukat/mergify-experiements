@@ -24,10 +24,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Modified: Run tests multiple times for flaky detection
+      # Modified: Run tests multiple times for flaky detections
       - name: Run tests
         env:
-          # Run tests 5 times on schedule, once on pull-request
+          # Run tests 5 times on schedule, once on pull_request
           RUN_COUNT: 5
         run: |
           mkdir -p test-results
