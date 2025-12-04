@@ -27,7 +27,7 @@ jobs:
       # Modified: Run tests multiple times for flaky detection
       - name: Run tests
         env:
-          # Run tests 5 times on schedule, once on pull_request
+          # Run tests 5 times on schedule, once on pull-request
           RUN_COUNT: 5
         run: |
           mkdir -p test-results
