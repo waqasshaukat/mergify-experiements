@@ -50,7 +50,20 @@ jobs:
             else
               echo "✗ Failed to generate valid junit-$i.xml or file is empty/malformed"
               # Create a minimal valid XML file as fallback
-              echo '<?xml version="1.0"?><testsuite name="Run '$i'" tests="0" failures="0" errors="1"><testcase name="Test execution failed"/></testsuite>' > test-results/junit-$i.xml
+              echo '<?xml version="1.0"?><testsuites><testsuite name="Run '$i'" tests="0" failures="0" errors="1"><testcase name="Test execution failed"/></testsuite></testsuites>' > test-results/junit-$i.xml
+            fi
+          done
+
+          # Post-process: Wrap <testsuite> in <testsuites> if needed (Mergify CI requires this)
+          for file in test-results/junit-*.xml; do
+            if [ -f "$file" ] && ! grep -q "<testsuites" "$file"; then
+              echo "Wrapping $file with <testsuites> tag"
+              # Create a temporary file with testsuites wrapper
+              echo '<?xml version="1.0" encoding="UTF-8"?>' > "$file.tmp"
+              echo '<testsuites>' >> "$file.tmp"
+              cat "$file" >> "$file.tmp"
+              echo '</testsuites>' >> "$file.tmp"
+              mv "$file.tmp" "$file"
             fi
           done
 
