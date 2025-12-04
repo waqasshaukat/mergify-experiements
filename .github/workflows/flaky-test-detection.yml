@@ -1,4 +1,4 @@
-name: Flaky Test Detection
+name: CI
 
 on:
   push:
@@ -8,14 +8,9 @@ on:
   schedule:
     - cron: '0 */12 * * 1-5'  # Every 12 hours, Monday to Friday
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4
@@ -81,5 +76,6 @@ jobs:
         if: always()
         uses: mergifyio/gha-mergify-ci@v6
         with:
+          flaky_test_detection: true
           token: ${{ secrets.MERGIFY_TOKEN }}
           report_path: test-results/*.xml
