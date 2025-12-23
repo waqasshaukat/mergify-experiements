@@ -32,9 +32,9 @@ jobs:
           sleep 2
 
       - name: TEMP - Simulate flaky test (REMOVE AFTER TESTING)
-        if: github.run_attempt == 1
+        if: github.run_attempt < 3
         run: |
-          echo "Simulating flaky test - failing on attempt 1"
+          echo "Simulating flaky test - failing on attempts 1 and 2"
           exit 1
 
       - name: Run actual tests
