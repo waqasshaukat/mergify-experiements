@@ -59,15 +59,15 @@ jobs:
                     attempt_number: attemptNum
                   });
 
-                  const failedJobsInAttempt = jobs.data.jobs
-                    .filter(job => job.conclusion === 'failure' || job.conclusion === 'timed_out')
-                    .map(job => job.name);
-
-                  for (const jobName of failedJobsInAttempt) {
-                    if (!allFailedJobs.has(jobName)) {
-                      allFailedJobs.set(jobName, []);
+                  const failedJobsInAttempt = [];
+                  for (const job of jobs.data.jobs) {
+                    if (job.conclusion === 'failure' || job.conclusion === 'timed_out') {
+                      failedJobsInAttempt.push(job.name);
+                      if (!allFailedJobs.has(job.name)) {
+                        allFailedJobs.set(job.name, []);
+                      }
+                      allFailedJobs.get(job.name).push(attemptNum);
                     }
-                    allFailedJobs.get(jobName).push(attemptNum);
                   }
 
                   console.log(`Attempt ${attemptNum}: Failed jobs - ${failedJobsInAttempt.join(', ')}`);
